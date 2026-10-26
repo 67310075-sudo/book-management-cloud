@@ -120,13 +120,28 @@ else:
         }
     }
 
-# Email Configuration (Lab 9.2 & 9.6)
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'rtaxdt@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'oirjaxwfzkfxysik')
+# Email Configuration (Lab 9.2 & 9.6 - Compatible with Django 5 & 6)
+import django
+
+if django.VERSION[0] >= 6:
+    MAILERS = {
+        'default': {
+            'BACKEND': os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend'),
+            'HOST': os.getenv('EMAIL_HOST', 'smtp.gmail.com'),
+            'PORT': int(os.getenv('EMAIL_PORT', '587')),
+            'USE_TLS': os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes'),
+            'USERNAME': os.getenv('EMAIL_HOST_USER', 'rtaxdt@gmail.com'),
+            'PASSWORD': os.getenv('EMAIL_HOST_PASSWORD', 'oirjaxwfzkfxysik'),
+        }
+    }
+else:
+    EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'rtaxdt@gmail.com')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'oirjaxwfzkfxysik')
+
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Book Store <rtaxdt@gmail.com>')
 
 
