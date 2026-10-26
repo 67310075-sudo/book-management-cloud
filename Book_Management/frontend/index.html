@@ -187,36 +187,119 @@
         </div>
       </div>
 
-      <!-- Login / Auth Card (Shown when not logged in) -->
+      <!-- Login / Register / Auth Card (Shown when not logged in) -->
       <div id="authSection" class="auth-section">
         <div class="auth-card">
-          <div class="auth-card-header">
-            <div class="auth-icon">🔐</div>
-            <h2>Sign In to BookVault</h2>
-            <p>Enter your credentials or use the Quick Role Switcher above.</p>
+          <!-- Auth Mode Navigation Tabs -->
+          <div class="auth-nav-tabs">
+            <button type="button" class="auth-nav-tab active" id="tabSignIn">🔐 Sign In</button>
+            <button type="button" class="auth-nav-tab" id="tabRegister">📝 Register (Lab 9.2)</button>
           </div>
 
-          <form id="loginForm" class="auth-form">
-            <div class="form-group">
-              <label for="loginEmail">Email Address</label>
-              <input type="email" id="loginEmail" placeholder="e.g. usera@test.com" required value="usera@test.com">
+          <!-- 1. Sign In Container -->
+          <div id="loginContainer">
+            <div class="auth-card-header">
+              <div class="auth-icon">🔐</div>
+              <h2>Sign In to BookVault</h2>
+              <p>Enter your credentials or use the Quick Role Switcher above.</p>
             </div>
-            <div class="form-group">
-              <label for="loginPassword">Password</label>
-              <input type="password" id="loginPassword" placeholder="••••••••" required value="123456">
-            </div>
-            <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
-              Sign In with JWT
-            </button>
-          </form>
 
-          <div class="auth-presets">
-            <p class="presets-title">Quick Fill Credentials:</p>
-            <div class="presets-chips">
-              <button type="button" class="preset-chip" onclick="window.fillLogin('usera@test.com', '123456')">Viewer (usera)</button>
-              <button type="button" class="preset-chip" onclick="window.fillLogin('userb@test.com', '123456')">Editor (userb)</button>
-              <button type="button" class="preset-chip" onclick="window.fillLogin('userc@test.com', '123456')">Admin (userc)</button>
-              <button type="button" class="preset-chip" onclick="window.fillLogin('manager@test.com', '123456')">Manager</button>
+            <form id="loginForm" class="auth-form">
+              <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+                <input type="email" id="loginEmail" placeholder="e.g. usera@test.com" required value="usera@test.com">
+              </div>
+              <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" required value="123456">
+              </div>
+              <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
+                Sign In with JWT
+              </button>
+            </form>
+
+            <div class="auth-presets">
+              <p class="presets-title">Quick Fill Credentials:</p>
+              <div class="presets-chips">
+                <button type="button" class="preset-chip" onclick="window.fillLogin('usera@test.com', '123456')">Viewer (usera)</button>
+                <button type="button" class="preset-chip" onclick="window.fillLogin('userb@test.com', '123456')">Editor (userb)</button>
+                <button type="button" class="preset-chip" onclick="window.fillLogin('userc@test.com', '123456')">Admin (userc)</button>
+                <button type="button" class="preset-chip" onclick="window.fillLogin('manager@test.com', '123456')">Manager</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Register Container (Lab 9.2 + Lab 9.3) -->
+          <div id="registerContainer" class="hidden">
+            <div class="auth-card-header">
+              <div class="auth-icon">📝</div>
+              <h2>Create New Account</h2>
+              <p>Register with email verification PIN & bcrypt password hashing.</p>
+            </div>
+
+            <form id="registerForm" class="auth-form">
+              <div class="form-group">
+                <label for="regName">Full Name *</label>
+                <input type="text" id="regName" placeholder="e.g. Somsak Jaidee" required>
+              </div>
+              <div class="form-group">
+                <label for="regEmail">Email Address *</label>
+                <input type="email" id="regEmail" placeholder="e.g. somsak@gmail.com" required>
+              </div>
+              <div class="form-group">
+                <label for="regPassword">Password * (bcrypt hashed)</label>
+                <input type="password" id="regPassword" placeholder="••••••••" minlength="4" required>
+              </div>
+              <div class="form-group">
+                <label for="regRole">Role (Lab 9.5 RBAC)</label>
+                <select id="regRole" class="dropdown-filter" style="width: 100%; padding: 0.75rem 1rem; background: var(--bg-input); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-main);">
+                  <option value="viewer">Viewer (Read-Only)</option>
+                  <option value="editor">Editor (View + Create + Edit)</option>
+                  <option value="admin">Admin (Full Control + Delete)</option>
+                  <option value="manager">Manager (Management)</option>
+                </select>
+              </div>
+              <button type="submit" id="btnRegisterSubmit" class="btn btn-primary btn-block">
+                Register & Send 4-Digit PIN
+              </button>
+            </form>
+
+            <div class="auth-switch-note">
+              <span>Already have an account?</span>
+              <button type="button" class="link-btn" id="linkToSignIn">Sign In</button>
+            </div>
+          </div>
+
+          <!-- 3. Verify PIN Container (Lab 9.2 Verification) -->
+          <div id="verifyContainer" class="hidden">
+            <div class="auth-card-header">
+              <div class="auth-icon">✉️</div>
+              <h2>Verify Your Account</h2>
+              <p>Enter the 4-digit PIN sent to your email to activate your account.</p>
+            </div>
+
+            <div id="pinInfoBox" class="pin-info-box">
+              <span class="pin-hint-label">🔑 Generated Verification PIN:</span>
+              <span id="pinDisplayValue" class="pin-display-code">----</span>
+              <p class="pin-hint-sub">PIN has been sent via email and is also displayed here for testing convenience.</p>
+            </div>
+
+            <form id="verifyForm" class="auth-form">
+              <div class="form-group">
+                <label for="verifyEmail">Email Address</label>
+                <input type="email" id="verifyEmail" readonly style="opacity: 0.8; cursor: not-allowed;">
+              </div>
+              <div class="form-group">
+                <label for="verifyPin">4-Digit Verification PIN *</label>
+                <input type="text" id="verifyPin" class="pin-input" placeholder="1234" maxlength="4" required>
+              </div>
+              <button type="submit" id="btnVerifySubmit" class="btn btn-block" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.85rem; font-weight: 600; border-radius: var(--radius-sm); border: none; cursor: pointer;">
+                ✅ Verify PIN & Activate Account
+              </button>
+            </form>
+
+            <div class="auth-switch-note">
+              <button type="button" class="link-btn" id="linkBackToRegister">← Back to Register</button>
             </div>
           </div>
         </div>

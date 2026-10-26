@@ -123,10 +123,15 @@ class LabRegisterView(APIView):
         # Lab 9.3 Rule: Hash password with bcrypt before saving to DB
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(10)).decode('utf-8')
 
+        role = request.data.get('role', 'viewer').strip().lower()
+        if role not in ['viewer', 'editor', 'admin', 'manager']:
+            role = 'viewer'
+
         user = User.objects.create(
             name=name,
             email=email,
             password=hashed_password,
+            role=role,
             is_verified=False,
             verification_token=pin
         )

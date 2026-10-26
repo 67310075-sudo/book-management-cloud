@@ -44,6 +44,28 @@ const loginForm = document.getElementById('loginForm');
 const loginEmail = document.getElementById('loginEmail');
 const loginPassword = document.getElementById('loginPassword');
 
+// Auth Tabs & Containers
+const tabSignIn = document.getElementById('tabSignIn');
+const tabRegister = document.getElementById('tabRegister');
+const loginContainer = document.getElementById('loginContainer');
+const registerContainer = document.getElementById('registerContainer');
+const verifyContainer = document.getElementById('verifyContainer');
+
+// Register Elements
+const registerForm = document.getElementById('registerForm');
+const regName = document.getElementById('regName');
+const regEmail = document.getElementById('regEmail');
+const regPassword = document.getElementById('regPassword');
+const regRole = document.getElementById('regRole');
+const linkToSignIn = document.getElementById('linkToSignIn');
+
+// Verify PIN Elements
+const verifyForm = document.getElementById('verifyForm');
+const verifyEmail = document.getElementById('verifyEmail');
+const verifyPin = document.getElementById('verifyPin');
+const pinDisplayValue = document.getElementById('pinDisplayValue');
+const linkBackToRegister = document.getElementById('linkBackToRegister');
+
 const bookModal = document.getElementById('bookModal');
 const bookForm = document.getElementById('bookForm');
 const modalTitle = document.getElementById('modalTitle');
@@ -167,6 +189,10 @@ function updateRoleUI() {
   statActiveRole.textContent = role.charAt(0).toUpperCase() + role.slice(1);
 
   // Role Permissions Rules (Lab 9.5 & 9.6)
+  // - Viewer: Read-only (Add, Edit, Delete are hidden)
+  // - Editor: View + Create + Edit (Delete is hidden)
+  // - Manager: View + Create + Edit (Delete is hidden)
+  // - Admin: Full Access (Add, Edit, Delete are all visible)
   if (role === 'viewer') {
     btnOpenAddModal.classList.add('hidden');
     roleAlertBanner.className = 'role-banner banner-viewer';
@@ -317,6 +343,10 @@ function renderBooksTable() {
 
     const price = parseFloat(book.price) || 0;
 
+    // RBAC Action Buttons Visibility
+    // Viewer: No action buttons
+    // Editor / Manager: Edit button only
+    // Admin: Edit and Delete buttons
     let actionButtonsHtml = '';
     if (role === 'admin') {
       actionButtonsHtml = `
@@ -455,23 +485,33 @@ window.fillLogin = (email, password) => {
   loginForm.dispatchEvent(new Event('submit'));
 };
 
-// Tab switcher for Login / Register / Verify
-window.switchTab = (tab) => {
-  ['login', 'register', 'verify'].forEach(t => {
-    document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', t !== tab);
-    document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('active', t === tab);
-  });
-};
+function switchAuthMode(mode) {
+  // mode: 'login' | 'register' | 'verify'
+  if (tabSignIn) tabSignIn.classList.toggle('active', mode === 'login');
+  if (tabRegister) tabRegister.classList.toggle('active', mode === 'register' || mode === 'verify');
+
+  if (loginContainer) loginContainer.classList.toggle('hidden', mode !== 'login');
+  if (registerContainer) registerContainer.classList.toggle('hidden', mode !== 'register');
+  if (verifyContainer) verifyContainer.classList.toggle('hidden', mode !== 'verify');
+}
 
 /**
  * Event Listeners Initialization
  */
 function initEvents() {
+  // Auth Tab Switching
+  if (tabSignIn) tabSignIn.addEventListener('click', () => switchAuthMode('login'));
+  if (tabRegister) tabRegister.addEventListener('click', () => switchAuthMode('register'));
+  if (linkToSignIn) linkToSignIn.addEventListener('click', () => switchAuthMode('login'));
+  if (linkBackToRegister) linkBackToRegister.addEventListener('click', () => switchAuthMode('register'));
+
+  // Quick role buttons
   document.getElementById('btnQuickUserA').addEventListener('click', () => handleQuickLogin('usera@test.com'));
   document.getElementById('btnQuickUserB').addEventListener('click', () => handleQuickLogin('userb@test.com'));
   document.getElementById('btnQuickUserC').addEventListener('click', () => handleQuickLogin('userc@test.com'));
   document.getElementById('btnQuickManager').addEventListener('click', () => handleQuickLogin('manager@test.com'));
 
+  // Login form submit
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = loginEmail.value.trim();
@@ -489,30 +529,83 @@ function initEvents() {
     }
   });
 
+  // Register form submit (Lab 9.2 + Lab 9.3)
+  if (registerForm) {
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = regName.value.trim();
+      const email = regEmail.value.trim();
+      const password = regPassword.value.trim();
+      const role = regRole ? regRole.value : 'viewer';
+
+      try {
+        showToast('Registering user & hashing password...', 'info');
+        const res = await api.register(name, email, password, role);
+        showToast(res.message || 'Registration successful! Verification PIN sent.', 'success');
+
+        // Transition to PIN verification screen
+        if (verifyEmail) verifyEmail.value = email;
+        if (pinDisplayValue) pinDisplayValue.textContent = res.pin || '****';
+        if (verifyPin) verifyPin.value = res.pin || ''; // Pre-fill PIN for lab testing ease
+        switchAuthMode('verify');
+      } catch (err) {
+        showToast(`Registration failed: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  // Verify PIN form submit (Lab 9.2 Verification)
+  if (verifyForm) {
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = verifyEmail.value.trim();
+      const pin = verifyPin.value.trim();
+
+      try {
+        showToast('Verifying PIN with backend...', 'info');
+        const res = await api.verify(email, pin);
+        showToast(res.message || 'Email verified successfully! You can now log in.', 'success');
+
+        // Pre-fill and switch to login
+        if (loginEmail) loginEmail.value = email;
+        if (loginPassword) loginPassword.value = regPassword.value || '';
+        switchAuthMode('login');
+      } catch (err) {
+        showToast(`Verification failed: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  // Search input
   searchInput.addEventListener('input', (e) => {
     state.searchQuery = e.target.value.trim();
     applyFilters();
   });
 
+  // Category filter
   categoryFilter.addEventListener('change', (e) => {
     state.selectedCategory = e.target.value;
     applyFilters();
   });
 
+  // Sort order
   sortSelector.addEventListener('change', (e) => {
     state.sortOrder = e.target.value;
     applyFilters();
   });
 
+  // Refresh button
   btnRefresh.addEventListener('click', () => {
     loadBooks();
     showToast('Inventory refreshed', 'info');
   });
 
+  // Add Book Modal
   btnOpenAddModal.addEventListener('click', openAddModal);
   btnCloseModal.addEventListener('click', closeBookModal);
   btnCancelModal.addEventListener('click', closeBookModal);
 
+  // Save Book Form
   bookForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -539,46 +632,7 @@ function initEvents() {
     }
   });
 
-  // Register Form
-  document.getElementById('registerForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('regName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const password = document.getElementById('regPassword').value.trim();
-
-    try {
-      showToast('Creating account...', 'info');
-      const res = await api.register(name, email, password);
-      showToast(`Account created! PIN sent to ${email}. Check your inbox.`, 'success');
-      // Pre-fill verify form
-      document.getElementById('verifyEmail').value = email;
-      if (res.pin) {
-        document.getElementById('verifyPin').value = res.pin;
-        showToast(`Dev mode: PIN is ${res.pin}`, 'info');
-      }
-      window.switchTab('verify');
-    } catch (err) {
-      showToast(`Registration failed: ${err.message}`, 'error');
-    }
-  });
-
-  // Verify PIN Form
-  document.getElementById('verifyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('verifyEmail').value.trim();
-    const pin = document.getElementById('verifyPin').value.trim();
-
-    try {
-      showToast('Verifying PIN...', 'info');
-      await api.verifyPin(email, pin);
-      showToast('Email verified! You can now sign in.', 'success');
-      document.getElementById('loginEmail').value = email;
-      window.switchTab('login');
-    } catch (err) {
-      showToast(`Verification failed: ${err.message}`, 'error');
-    }
-  });
-
+  // Delete Book Modal Actions
   btnCancelDelete.addEventListener('click', closeDeleteModal);
   btnConfirmDelete.addEventListener('click', async () => {
     if (!state.deletingBookId) return;
@@ -602,10 +656,14 @@ function initEvents() {
   });
 }
 
+/**
+ * Main App Initialization
+ */
 async function initApp() {
   initEvents();
   await checkApiHealth();
 
+  // Check stored user credentials
   const storedUser = storage.getUser();
   const storedToken = storage.getToken();
 
@@ -614,8 +672,10 @@ async function initApp() {
     updateRoleUI();
     await loadBooks();
   } else {
+    // Default: auto login as User A (Viewer) for an instant WOW experience
     await handleQuickLogin('usera@test.com');
   }
 }
 
+// Start application
 initApp();

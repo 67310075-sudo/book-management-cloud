@@ -110,6 +110,28 @@ export const api = {
   },
 
   /**
+   * POST /api/register/
+   */
+  async register(name, email, password, role = 'viewer') {
+    const res = await request('/api/register/', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role })
+    });
+    return res.data;
+  },
+
+  /**
+   * POST /api/verify/
+   */
+  async verify(email, pin) {
+    const res = await request('/api/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ email, pin })
+    });
+    return res.data;
+  },
+
+  /**
    * GET /api/profile/
    */
   async getProfile() {

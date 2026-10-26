@@ -89,6 +89,9 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  /**
+   * POST /api/login/
+   */
   async login(email, password) {
     const res = await request('/api/login/', {
       method: 'POST',
@@ -106,6 +109,31 @@ export const api = {
     return res.data;
   },
 
+  /**
+   * POST /api/register/
+   */
+  async register(name, email, password, role = 'viewer') {
+    const res = await request('/api/register/', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role })
+    });
+    return res.data;
+  },
+
+  /**
+   * POST /api/verify/
+   */
+  async verify(email, pin) {
+    const res = await request('/api/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ email, pin })
+    });
+    return res.data;
+  },
+
+  /**
+   * GET /api/profile/
+   */
   async getProfile() {
     const res = await request('/api/profile/', { method: 'GET' });
     if (res.data) {
@@ -114,11 +142,17 @@ export const api = {
     return res.data;
   },
 
+  /**
+   * GET /api/books/
+   */
   async getBooks() {
     const res = await request('/api/books/', { method: 'GET' });
     return res.data;
   },
 
+  /**
+   * POST /api/books/
+   */
   async createBook(book) {
     const res = await request('/api/books/', {
       method: 'POST',
@@ -127,6 +161,9 @@ export const api = {
     return res.data;
   },
 
+  /**
+   * PUT /api/books/:id/
+   */
   async updateBook(id, book) {
     const res = await request(`/api/books/${id}/`, {
       method: 'PUT',
@@ -135,6 +172,9 @@ export const api = {
     return res.data;
   },
 
+  /**
+   * DELETE /api/books/:id/
+   */
   async deleteBook(id) {
     const res = await request(`/api/books/${id}/`, {
       method: 'DELETE'
@@ -142,31 +182,19 @@ export const api = {
     return res;
   },
 
+  /**
+   * Health check / ping backend
+   */
   async ping() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/books/`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' }
       });
+      // 200 or 401 means server is up and responding
       return res.status === 200 || res.status === 401;
     } catch {
       return false;
     }
-  },
-
-  async register(name, email, password) {
-    const res = await request('/api/register/', {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password })
-    });
-    return res.data;
-  },
-
-  async verifyPin(email, pin) {
-    const res = await request('/api/verify/', {
-      method: 'POST',
-      body: JSON.stringify({ email, pin })
-    });
-    return res.data;
   }
 };
