@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Management System | Cloud RBAC Platform</title>
+  <meta name="description" content="Modern Book Management System with Django REST Framework, Aiven Cloud MySQL, Render Backend, and Vercel Frontend.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Background glowing ambient lights -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="brand">
+          <div class="brand-icon">📚</div>
+          <div class="brand-text">
+            <h1>BookVault <span class="badge-cloud">Cloud</span></h1>
+            <span class="subtext">Lab 9.6 & 9.7 Cloud Architecture</span>
+          </div>
+        </div>
+
+        <div class="api-status-pill" id="apiStatusPill">
+          <span class="status-dot"></span>
+          <span class="status-label">Backend:</span>
+          <span class="status-url" id="activeApiUrl">Connecting...</span>
+        </div>
+
+        <div class="nav-actions" id="userNavSection">
+          <!-- Populated by JS when logged in -->
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+      <!-- Quick Role Switcher Banner (For testing & grading) -->
+      <section class="role-switcher-card">
+        <div class="switcher-header">
+          <div class="switcher-title">
+            <span class="icon">⚡</span>
+            <div>
+              <h3>Role-Based Access Control (RBAC) Switcher</h3>
+              <p>Click any user below to instantly switch session and test permission boundaries (Password: <code>123456</code>)</p>
+            </div>
+          </div>
+          <div class="current-role-indicator" id="currentRoleIndicator">
+            <span class="role-pill pill-guest">Guest</span>
+          </div>
+        </div>
+        <div class="user-buttons-grid">
+          <button class="btn-role-quick" id="btnQuickUserA" data-email="usera@test.com">
+            <span class="user-avatar avatar-viewer">A</span>
+            <div class="user-meta">
+              <span class="name">User A</span>
+              <span class="role-tag tag-viewer">VIEWER</span>
+            </div>
+            <span class="role-desc">Read-Only</span>
+          </button>
+          <button class="btn-role-quick" id="btnQuickUserB" data-email="userb@test.com">
+            <span class="user-avatar avatar-editor">B</span>
+            <div class="user-meta">
+              <span class="name">User B</span>
+              <span class="role-tag tag-editor">EDITOR</span>
+            </div>
+            <span class="role-desc">View + Create + Edit</span>
+          </button>
+          <button class="btn-role-quick" id="btnQuickUserC" data-email="userc@test.com">
+            <span class="user-avatar avatar-admin">C</span>
+            <div class="user-meta">
+              <span class="name">User C</span>
+              <span class="role-tag tag-admin">ADMIN</span>
+            </div>
+            <span class="role-desc">Full Control (Can Delete)</span>
+          </button>
+          <button class="btn-role-quick" id="btnQuickManager" data-email="manager@test.com">
+            <span class="user-avatar avatar-manager">M</span>
+            <div class="user-meta">
+              <span class="name">Manager</span>
+              <span class="role-tag tag-manager">MANAGER</span>
+            </div>
+            <span class="role-desc">Management Role</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Dashboard View (Shown when logged in) -->
+      <div id="dashboardSection" class="dashboard-section hidden">
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon icon-books">📖</div>
+            <div class="stat-info">
+              <span class="stat-label">Total Books</span>
+              <h2 class="stat-value" id="statTotalBooks">0</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-value">💎</div>
+            <div class="stat-info">
+              <span class="stat-label">Inventory Value</span>
+              <h2 class="stat-value" id="statTotalValue">0 ฿</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-categories">🏷️</div>
+            <div class="stat-info">
+              <span class="stat-label">Categories</span>
+              <h2 class="stat-value" id="statTotalCategories">0</h2>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon icon-shield">🛡️</div>
+            <div class="stat-info">
+              <span class="stat-label">Active Role</span>
+              <h2 class="stat-value" id="statActiveRole">Viewer</h2>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Permission Alert Banner -->
+        <div id="roleAlertBanner" class="role-banner banner-viewer">
+          <span class="banner-icon">ℹ️</span>
+          <span class="banner-text" id="roleAlertText">Logged in as Viewer: Read-Only access. Modify and Delete actions are restricted.</span>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+          <div class="search-filter-group">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="searchInput" placeholder="Search books by title, author, or category...">
+            </div>
+            <select id="categoryFilter" class="dropdown-filter">
+              <option value="">All Categories</option>
+            </select>
+            <select id="sortSelector" class="dropdown-filter">
+              <option value="id-desc">Newest First</option>
+              <option value="id-asc">Oldest First</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="title-asc">Title: A-Z</option>
+            </select>
+          </div>
+
+          <div class="action-buttons-group">
+            <button id="btnRefresh" class="btn btn-secondary">
+              <span class="btn-icon">🔄</span> Refresh
+            </button>
+            <button id="btnOpenAddModal" class="btn btn-primary">
+              <span class="btn-icon">➕</span> Add New Book
+            </button>
+          </div>
+        </div>
+
+        <!-- Books Table Container -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="books-table" id="booksTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th>Title & Author</th>
+                  <th>Category</th>
+                  <th style="text-align: right;">Price (THB)</th>
+                  <th style="text-align: center;">Stock</th>
+                  <th style="width: 160px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="booksTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+          <div id="tableEmptyState" class="empty-state hidden">
+            <div class="empty-icon">📭</div>
+            <h3>No books found</h3>
+            <p>Try clearing your search query or add a new book to the inventory.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login / Auth Card (Shown when not logged in) -->
+      <div id="authSection" class="auth-section">
+        <div class="auth-card">
+          <div class="auth-card-header">
+            <div class="auth-icon">🔐</div>
+            <h2>Sign In to BookVault</h2>
+            <p>Enter your credentials or use the Quick Role Switcher above.</p>
+          </div>
+
+          <form id="loginForm" class="auth-form">
+            <div class="form-group">
+              <label for="loginEmail">Email Address</label>
+              <input type="email" id="loginEmail" placeholder="e.g. usera@test.com" required value="usera@test.com">
+            </div>
+            <div class="form-group">
+              <label for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" placeholder="••••••••" required value="123456">
+            </div>
+            <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
+              Sign In with JWT
+            </button>
+          </form>
+
+          <div class="auth-presets">
+            <p class="presets-title">Quick Fill Credentials:</p>
+            <div class="presets-chips">
+              <button type="button" class="preset-chip" onclick="window.fillLogin('usera@test.com', '123456')">Viewer (usera)</button>
+              <button type="button" class="preset-chip" onclick="window.fillLogin('userb@test.com', '123456')">Editor (userb)</button>
+              <button type="button" class="preset-chip" onclick="window.fillLogin('userc@test.com', '123456')">Admin (userc)</button>
+              <button type="button" class="preset-chip" onclick="window.fillLogin('manager@test.com', '123456')">Manager</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Add/Edit Book Modal -->
+    <div id="bookModal" class="modal-backdrop hidden">
+      <div class="modal-window">
+        <div class="modal-header">
+          <h3 id="modalTitle">Add New Book</h3>
+          <button class="modal-close" id="btnCloseModal">&times;</button>
+        </div>
+        <form id="bookForm" class="modal-form">
+          <input type="hidden" id="bookId">
+          <div class="form-group">
+            <label for="bookTitle">Book Title *</label>
+            <input type="text" id="bookTitle" required placeholder="e.g. Clean Architecture">
+          </div>
+          <div class="form-group">
+            <label for="bookAuthor">Author *</label>
+            <input type="text" id="bookAuthor" required placeholder="e.g. Robert C. Martin">
+          </div>
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="bookPrice">Price (THB) *</label>
+              <input type="number" step="0.01" min="0" id="bookPrice" required placeholder="450.00">
+            </div>
+            <div class="form-group col-half">
+              <label for="bookStock">Stock Quantity *</label>
+              <input type="number" min="0" id="bookStock" required placeholder="10">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bookCategory">Category *</label>
+            <input type="text" id="bookCategory" required placeholder="e.g. Programming, Cloud, Architecture">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveBook">Save Book</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-backdrop hidden">
+      <div class="modal-window modal-confirm">
+        <div class="confirm-icon">⚠️</div>
+        <h3>Delete Confirmation</h3>
+        <p id="deleteMessage">Are you sure you want to permanently delete this book?</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmDelete">Delete Book</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

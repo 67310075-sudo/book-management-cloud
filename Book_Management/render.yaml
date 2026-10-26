@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: book-management-backend
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn Book_Management.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CORS_ALLOW_ALL
+        value: "True"
+      - key: JWT_SECRET
+        value: "my_bookstore_secret"
+      - key: DB_ENGINE
+        value: "django.db.backends.mysql"
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_USER
+        value: "avnadmin"
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: "defaultdb"
+      - key: DB_SSL_REQUIRED
+        value: "True"
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        value: "rtaxdt@gmail.com"
+      - key: EMAIL_HOST_PASSWORD
+        value: "oirjaxwfzkfxysik"
