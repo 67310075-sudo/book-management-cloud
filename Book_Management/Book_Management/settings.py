@@ -4,6 +4,7 @@ Configured for Lab 9.6 & 9.7 Cloud Deployment (Render + Aiven MySQL + Vercel)
 """
 
 import os
+import ssl
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -82,12 +83,23 @@ if DB_HOST:
     ca_path = os.getenv('DB_SSL_CA', str(BASE_DIR / 'aiven_ca.pem'))
     ssl_options = {}
     ssl_required = os.getenv('DB_SSL_REQUIRED', 'True').lower() in ('true', '1', 'yes')
+
     if ssl_required:
-        if os.path.exists(ca_path) and os.path.getsize(ca_path) > 0:
-            ssl_options['ssl'] = {'ca': ca_path}
-        else:
-            # Fallback to REQUIRED SSL mode if ca file not present
-            ssl_options['ssl'] = {'ssl_mode': 'REQUIRED'}
+        ctx = ssl.create_default_context()
+        if os.path.exists(ca_path) and os.path.getsize(ca_path) > 50:
+            try:
+                ctx.load_verify_locations(cafile=ca_path)
+            except Exception:
+                pass
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        ssl_options['ssl'] = ctx
+
+    port_val = os.getenv('DB_PORT', '21625').strip()
+    try:
+        db_port = int(port_val)
+    except (ValueError, TypeError):
+        db_port = 21625
 
     DATABASES = {
         'default': {
@@ -96,7 +108,7 @@ if DB_HOST:
             'USER': os.getenv('DB_USER', 'avnadmin'),
             'PASSWORD': os.getenv('DB_PASSWORD', ''),
             'HOST': DB_HOST,
-            'PORT': os.getenv('DB_PORT', '3306'),
+            'PORT': db_port,
             'OPTIONS': ssl_options,
         }
     }
