@@ -152,5 +152,21 @@ export const api = {
     } catch {
       return false;
     }
+  },
+
+  async register(name, email, password) {
+    const res = await request('/api/register/', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password })
+    });
+    return res.data;
+  },
+
+  async verifyPin(email, pin) {
+    const res = await request('/api/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ email, pin })
+    });
+    return res.data;
   }
 };

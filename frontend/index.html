@@ -192,33 +192,84 @@
         <div class="auth-card">
           <div class="auth-card-header">
             <div class="auth-icon">🔐</div>
-            <h2>Sign In to BookVault</h2>
-            <p>Enter your credentials or use the Quick Role Switcher above.</p>
+            <h2>BookVault Account</h2>
+            <p>Sign in, create an account, or verify your email.</p>
           </div>
 
-          <form id="loginForm" class="auth-form">
-            <div class="form-group">
-              <label for="loginEmail">Email Address</label>
-              <input type="email" id="loginEmail" placeholder="e.g. usera@test.com" required value="usera@test.com">
-            </div>
-            <div class="form-group">
-              <label for="loginPassword">Password</label>
-              <input type="password" id="loginPassword" placeholder="••••••••" required value="123456">
-            </div>
-            <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
-              Sign In with JWT
-            </button>
-          </form>
+          <!-- Auth Tabs -->
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="tabLogin" onclick="window.switchTab('login')">Sign In</button>
+            <button class="auth-tab" id="tabRegister" onclick="window.switchTab('register')">Register</button>
+            <button class="auth-tab" id="tabVerify" onclick="window.switchTab('verify')">Verify PIN</button>
+          </div>
 
-          <div class="auth-presets">
-            <p class="presets-title">Quick Fill Credentials:</p>
-            <div class="presets-chips">
-              <button type="button" class="preset-chip" onclick="window.fillLogin('usera@test.com', '123456')">Viewer (usera)</button>
-              <button type="button" class="preset-chip" onclick="window.fillLogin('userb@test.com', '123456')">Editor (userb)</button>
-              <button type="button" class="preset-chip" onclick="window.fillLogin('userc@test.com', '123456')">Admin (userc)</button>
-              <button type="button" class="preset-chip" onclick="window.fillLogin('manager@test.com', '123456')">Manager</button>
+          <!-- Login Form -->
+          <div id="panelLogin">
+            <form id="loginForm" class="auth-form">
+              <div class="form-group">
+                <label for="loginEmail">Email Address</label>
+                <input type="email" id="loginEmail" placeholder="e.g. usera@test.com" required value="usera@test.com">
+              </div>
+              <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" required value="123456">
+              </div>
+              <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
+                Sign In with JWT
+              </button>
+            </form>
+
+            <div class="auth-presets">
+              <p class="presets-title">Quick Fill Credentials:</p>
+              <div class="presets-chips">
+                <button type="button" class="preset-chip" onclick="window.fillLogin('usera@test.com', '123456')">Viewer (usera)</button>
+                <button type="button" class="preset-chip" onclick="window.fillLogin('userb@test.com', '123456')">Editor (userb)</button>
+                <button type="button" class="preset-chip" onclick="window.fillLogin('userc@test.com', '123456')">Admin (userc)</button>
+                <button type="button" class="preset-chip" onclick="window.fillLogin('manager@test.com', '123456')">Manager</button>
+              </div>
             </div>
           </div>
+
+          <!-- Register Form -->
+          <div id="panelRegister" class="hidden">
+            <form id="registerForm" class="auth-form">
+              <div class="form-group">
+                <label for="regName">Full Name</label>
+                <input type="text" id="regName" placeholder="e.g. John Doe" required>
+              </div>
+              <div class="form-group">
+                <label for="regEmail">Email Address</label>
+                <input type="email" id="regEmail" placeholder="e.g. john@example.com" required>
+              </div>
+              <div class="form-group">
+                <label for="regPassword">Password</label>
+                <input type="password" id="regPassword" placeholder="Min. 6 characters" required minlength="6">
+              </div>
+              <button type="submit" id="btnRegisterSubmit" class="btn btn-primary btn-block">
+                Create Account
+              </button>
+            </form>
+            <p class="auth-note">After registering, a 4-digit verification PIN will be sent to your email. New accounts get <strong>Viewer</strong> role by default.</p>
+          </div>
+
+          <!-- Verify PIN Form -->
+          <div id="panelVerify" class="hidden">
+            <form id="verifyForm" class="auth-form">
+              <div class="form-group">
+                <label for="verifyEmail">Email Address</label>
+                <input type="email" id="verifyEmail" placeholder="Your registered email" required>
+              </div>
+              <div class="form-group">
+                <label for="verifyPin">4-Digit Verification PIN</label>
+                <input type="text" id="verifyPin" placeholder="e.g. 1234" maxlength="4" pattern="[0-9]{4}" required style="letter-spacing: 0.5rem; font-size: 1.5rem; text-align: center;">
+              </div>
+              <button type="submit" id="btnVerifySubmit" class="btn btn-primary btn-block">
+                Verify Account
+              </button>
+            </form>
+            <p class="auth-note">Check your inbox for the 4-digit PIN. After verifying you can sign in.</p>
+          </div>
+
         </div>
       </div>
     </main>

@@ -455,6 +455,14 @@ window.fillLogin = (email, password) => {
   loginForm.dispatchEvent(new Event('submit'));
 };
 
+// Tab switcher for Login / Register / Verify
+window.switchTab = (tab) => {
+  ['login', 'register', 'verify'].forEach(t => {
+    document.getElementById(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('hidden', t !== tab);
+    document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.toggle('active', t === tab);
+  });
+};
+
 /**
  * Event Listeners Initialization
  */
@@ -528,6 +536,46 @@ function initEvents() {
       await loadBooks();
     } catch (err) {
       showToast(`Action failed: ${err.message}`, 'error');
+    }
+  });
+
+  // Register Form
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+
+    try {
+      showToast('Creating account...', 'info');
+      const res = await api.register(name, email, password);
+      showToast(`Account created! PIN sent to ${email}. Check your inbox.`, 'success');
+      // Pre-fill verify form
+      document.getElementById('verifyEmail').value = email;
+      if (res.pin) {
+        document.getElementById('verifyPin').value = res.pin;
+        showToast(`Dev mode: PIN is ${res.pin}`, 'info');
+      }
+      window.switchTab('verify');
+    } catch (err) {
+      showToast(`Registration failed: ${err.message}`, 'error');
+    }
+  });
+
+  // Verify PIN Form
+  document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('verifyEmail').value.trim();
+    const pin = document.getElementById('verifyPin').value.trim();
+
+    try {
+      showToast('Verifying PIN...', 'info');
+      await api.verifyPin(email, pin);
+      showToast('Email verified! You can now sign in.', 'success');
+      document.getElementById('loginEmail').value = email;
+      window.switchTab('login');
+    } catch (err) {
+      showToast(`Verification failed: ${err.message}`, 'error');
     }
   });
 
