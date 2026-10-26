@@ -147,7 +147,7 @@ class LabRegisterView(APIView):
         print(f" Verify URL: {verify_url}")
         print(f"=======================================================\n")
 
-        # Send actual email via Gmail SMTP
+        # Send actual email via Gmail SMTP in background thread (non-blocking)
         email_body = f"""Hello {name},
 
 Thank you for registering with Book Store!
@@ -165,16 +165,21 @@ You can also verify by clicking this link:
 Best regards,
 Book Store Team
 """
-        try:
-            send_mail(
-                subject=f"[Book Store] Your 4-Digit Verification PIN: {pin}",
-                message=email_body,
-                from_email="Book Store <rtaxdt@gmail.com>",
-                recipient_list=[email],
-                fail_silently=False
-            )
-        except Exception as e:
-            print(f"[MAIL NOTICE] Could not send via Gmail SMTP: {e}")
+        def _send_email_async():
+            try:
+                from_addr = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Book Store <rtaxdt@gmail.com>')
+                send_mail(
+                    subject=f"[Book Store] Your 4-Digit Verification PIN: {pin}",
+                    message=email_body,
+                    from_email=from_addr,
+                    recipient_list=[email],
+                    fail_silently=True
+                )
+            except Exception as e:
+                print(f"[MAIL NOTICE] Async email send failed: {e}")
+
+        import threading
+        threading.Thread(target=_send_email_async, daemon=True).start()
 
         return Response({
             "message": f"Verification PIN has been sent to {email}. Please enter the 4-digit PIN to verify.",

@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'Book_Management.wsgi.application'
 
 # Database Configuration
 # Cloud MySQL (Aiven) auto-detection: if DB_HOST is set, switch to MySQL with SSL
-DB_HOST = os.getenv('DB_HOST', '').strip()
+DB_HOST = os.getenv('DB_HOST', 'bookstore-mysql-go-644a.k.aivencloud.com').strip()
 
 if DB_HOST:
     ca_path = os.getenv('DB_SSL_CA', str(BASE_DIR / 'aiven_ca.pem'))
@@ -106,7 +106,7 @@ if DB_HOST:
             'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
             'NAME': os.getenv('DB_NAME', 'defaultdb'),
             'USER': os.getenv('DB_USER', 'avnadmin'),
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', '25282528'),
             'HOST': DB_HOST,
             'PORT': db_port,
             'OPTIONS': ssl_options,
@@ -119,6 +119,15 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+# Email Configuration (Lab 9.2 & 9.6)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'rtaxdt@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'oirjaxwfzkfxysik')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Book Store <rtaxdt@gmail.com>')
 
 
 # Password validation

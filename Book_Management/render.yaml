@@ -22,13 +22,13 @@ services:
       - key: DB_ENGINE
         value: "django.db.backends.mysql"
       - key: DB_HOST
-        sync: false
+        value: "bookstore-mysql-go-644a.k.aivencloud.com"
       - key: DB_PORT
         value: "21625"
       - key: DB_USER
         value: "avnadmin"
       - key: DB_PASSWORD
-        sync: false
+        value: "25282528"
       - key: DB_NAME
         value: "defaultdb"
       - key: DB_SSL_REQUIRED
